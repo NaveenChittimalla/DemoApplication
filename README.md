@@ -73,9 +73,9 @@ steps
 3. Delete the hidden folder .git from demoapplication.spa folder
 4. Go to root folder demoapplication and run git init
 5. create a .gitignore file in API project and ignore bin, obj, vscode items.
-6.
-
-Login to github account
-create a new repository DemoApplication
-
-git remote add origin https://github.com/NaveenChittimalla/DemoApplication.git
+6. Stage Changes
+7. Commit to local
+8. Login to github account
+   create a new repository DemoApplication
+9. git remote add origin https://github.com/NaveenChittimalla/DemoApplication.git
+10. Push to
