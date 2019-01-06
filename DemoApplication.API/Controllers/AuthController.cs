@@ -7,6 +7,11 @@ using DemoApplication.API.Data;
 using Microsoft.EntityFrameworkCore;
 using DemoApplication.API.Models;
 using DemoApplication.API.DTOs;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace DemoApplication.API.Controllers
 {
@@ -15,9 +20,12 @@ namespace DemoApplication.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthRepository _authRepository;
-        public AuthController(IAuthRepository authRepository)
+        private readonly IConfiguration _configuration;
+        public AuthController(IAuthRepository authRepository,
+        IConfiguration configuration)
         {
             _authRepository = authRepository;
+            _configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -36,6 +44,39 @@ namespace DemoApplication.API.Controllers
             };
             var createdUser = await _authRepository.Register(userToCreate, userForRegisterDTO.Password);
             return StatusCode(201);
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] UserForLoginDTO userForLoginDTO)
+        {
+            var user = await _authRepository.Login(userForLoginDTO.Username.ToLower(), userForLoginDTO.Password);
+            if (user == null)
+                return Unauthorized();
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName.ToLower().ToString()),
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
+
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.Now.AddDays(1),
+                SigningCredentials = credentials
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return Ok(new
+            {
+                token = tokenHandler.WriteToken(token)
+            });
         }
     }
 }

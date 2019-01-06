@@ -2,12 +2,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DemoApplication.API.DTOs
 {
-    public class UserForRegisterDTO
+    public class UserForLoginDTO
     {
         [Required]
         public string Username { get; set; }
         [Required]
-        [StringLength(8, MinimumLength = 4, ErrorMessage = "Password must be between 4 and 8 characters")]
         public string Password { get; set; }
     }
 }
